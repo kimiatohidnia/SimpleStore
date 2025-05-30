@@ -1,0 +1,25 @@
+﻿@using Microsoft.AspNetCore.Http
+@using Newtonsoft.Json
+@using SimpleStore.Models
+@inject IHttpContextAccessor HttpContextAccessor
+
+@{
+    var cartJson = HttpContextAccessor.HttpContext.Session.GetString("Cart");
+    int itemCount = 0;
+
+    if (!string.IsNullOrEmpty(cartJson))
+    {
+        var cart = JsonConvert.DeserializeObject<CartViewModel>(cartJson);
+        itemCount = cart.Items.Sum(item => item.Quantity);
+    }
+}
+
+<li class="nav-item">
+    <a class="nav-link" asp-controller="Cart" asp-action="Index">
+        <i class="bi bi-cart"></i> Cart
+        @if (itemCount > 0)
+        {
+            <span class="badge bg-primary rounded-pill">@itemCount</span>
+        }
+    </a>
+</li>

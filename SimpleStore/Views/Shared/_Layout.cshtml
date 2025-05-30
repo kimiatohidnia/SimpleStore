@@ -1,0 +1,417 @@
+﻿@using System.Security.Claims
+@using SimpleStore.Models
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Blue Store</title>
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="container">
+            <nav class="navbar">
+                <!-- Logo -->
+                <div class="navbar-brand">
+                    <a href="/" class="logo">
+                        <i class="fas fa-store"></i>
+                        <span>Blue Store</span>
+                    </a>
+                </div>
+
+                <!-- Mobile menu toggle -->
+                <button class="mobile-toggle" id="mobile-toggle">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </button>
+
+                <!-- Navigation Links -->
+                <div class="navbar-nav" id="navbar-nav">
+                    <a asp-controller="Product" asp-action="Index" class="nav-link">
+                        <i class="fas fa-box"></i>
+                        Products
+                    </a>
+                    <a href="/Categories" class="nav-link">
+                        <i class="fas fa-tags"></i>
+                        Categories
+                    </a>
+                    <a href="/About" class="nav-link">
+                        <i class="fas fa-info-circle"></i>
+                        About
+                    </a>
+                    <a href="/Contact" class="nav-link">
+                        <i class="fas fa-envelope"></i>
+                        Contact
+                    </a>
+                </div>
+
+                <!-- User Actions -->
+                <div class="navbar-actions">
+                    <button class="btn-icon search-toggle" id="search-toggle">
+                        <i class="fas fa-search"></i>
+                    </button>
+                    <a asp-controller="Cart" asp-action="Index" class="btn-icon cart-btn">
+                        <i class="fas fa-shopping-cart"></i>
+                        <span class="cart-badge">!</span>
+                    </a>
+                    <div class="user-menu">
+                        <button class="btn-icon user-toggle" id="user-toggle">
+                            <i class="fas fa-user"></i>
+                        </button>
+                        <div class="user-dropdown" id="user-dropdown">
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <a asp-controller="Account" asp-action="Profile" class="dropdown-item">
+                                    <i class="fas fa-user-circle"></i>
+                                    Profile
+                                </a>
+                                <a asp-controller="Order" asp-action="History" class="dropdown-item">
+                                    <i class="fas fa-shopping-bag"></i>
+                                    My Orders
+                                </a>
+                                <a href="/Account/Wishlist" class="dropdown-item">
+                                    <i class="fas fa-heart"></i>
+                                    Wishlist
+                                </a>
+                                <div class="dropdown-divider"></div>
+                                <a asp-controller="Account" asp-action="Logout" class="dropdown-item">
+                                    <i class="fas fa-sign-out-alt"></i>
+                                    Logout
+                                </a>
+                            }
+                            else
+                            {
+                                <a asp-controller="Account" asp-action="Login" class="dropdown-item">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                    Login
+                                </a>
+                                <a asp-controller="Account" asp-action="Register" class="dropdown-item">
+                                    <i class="fas fa-sign-in-alt"></i>
+                                    Register
+                                </a>
+                            }
+
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                @* Only show Admin link to admin users *@
+                                @if (IsUserAdmin())
+                                {
+                                    <li class="nav-item">
+                                        <a class="nav-link" asp-area="" asp-controller="Admin" asp-action="Dashboard">
+                                            <i class="fas fa-crown me-1"></i>Admin
+                                        </a>
+                                    </li>
+                                }
+                            }
+                        </div>
+                    </div>
+                </div>
+            </nav>
+
+            <!-- Search Bar (Hidden by default) -->
+            <form method="get" asp-controller="Product" asp-action="Index" id="search-bar" class="search-bar" style="display">
+                <div class="search-container">
+                    <input type="text"
+                           name="SearchTerm"
+                           placeholder="Search products..."
+                           class="search-input"
+                           value="@(ViewBag.SearchQuery ?? "")" />
+                    <button class="search-btn">
+                        <i class="fas fa-search"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Breadcrumbs (optional) -->
+            @if (ViewData["ShowBreadcrumbs"] != null && (bool)ViewData["ShowBreadcrumbs"])
+            {
+                <nav class="breadcrumbs">
+                    <ol class="breadcrumb-list">
+                        <li class="breadcrumb-item">
+                            <a href="/"><i class="fas fa-home"></i></a>
+                        </li>
+                        <li class="breadcrumb-item active">@ViewData["Title"]</li>
+                    </ol>
+                </nav>
+            }
+
+            <!-- Page Content -->
+            <div class="page-content">
+                @RenderBody()
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <!-- Company Info -->
+                <div class="footer-section">
+                    <div class="footer-logo">
+                        <i class="fas fa-store"></i>
+                        <span>Blue Store</span>
+                    </div>
+                    <p class="footer-description">
+                        Your trusted online store for quality products with exceptional service and fast delivery.
+                    </p>
+                    <div class="social-links">
+                        <a href="#" class="social-link">
+                            <i class="fab fa-facebook-f"></i>
+                        </a>
+                        <a href="#" class="social-link">
+                            <i class="fab fa-twitter"></i>
+                        </a>
+                        <a href="#" class="social-link">
+                            <i class="fab fa-instagram"></i>
+                        </a>
+                        <a href="#" class="social-link">
+                            <i class="fab fa-linkedin-in"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Links -->
+                <div class="footer-section">
+                    <h3 class="footer-title">Quick Links</h3>
+                    <ul class="footer-links">
+                        <li><a asp-controller="Product" asp-action="Index">All Products</a></li>
+                        <li><a href="/Categories">Categories</a></li>
+                        <li><a href="/Deals">Special Deals</a></li>
+                        <li><a href="/NewArrivals">New Arrivals</a></li>
+                        <li><a href="/BestSellers">Best Sellers</a></li>
+                    </ul>
+                </div>
+
+                <!-- Customer Service -->
+                <div class="footer-section">
+                    <h3 class="footer-title">Customer Service</h3>
+                    <ul class="footer-links">
+                        <li><a href="/Help">Help Center</a></li>
+                        <li><a href="/Shipping">Shipping Info</a></li>
+                        <li><a href="/Returns">Returns & Exchanges</a></li>
+                        <li><a href="/TrackOrder">Track Your Order</a></li>
+                        <li><a href="/Contact">Contact Us</a></li>
+                    </ul>
+                </div>
+
+                <!-- Contact Info -->
+                <div class="footer-section">
+                    <h3 class="footer-title">Get in Touch</h3>
+                    <div class="contact-info">
+                        <div class="contact-item">
+                            <i class="fas fa-map-marker-alt"></i>
+                            <span>Tehran, Valiasr</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-phone"></i>
+                            <span>+21 88963251</span>
+                        </div>
+                        <div class="contact-item">
+                            <i class="fas fa-envelope"></i>
+                            <span>blueonlinestore@gmail.com</span>
+                        </div>
+                    </div>
+
+                    <!-- Newsletter Signup -->
+                    <div class="newsletter">
+                        <h4 class="newsletter-title">Stay Updated</h4>
+                        <form class="newsletter-form">
+                            <input type="email" placeholder="Enter your email" class="newsletter-input">
+                            <button type="submit" class="newsletter-btn">
+                                <i class="fas fa-paper-plane"></i>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Bottom -->
+            <div class="footer-bottom">
+                <div class="footer-bottom-content">
+                    <p class="copyright">
+                        © @DateTime.Now.Year Blue Store. All rights reserved.
+                    </p>
+                    <div class="footer-bottom-links">
+                        <a href="/Privacy">Privacy Policy</a>
+                        <a href="/Terms">Terms of Service</a>
+                        <a href="/Cookies">Cookie Policy</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loading-overlay">
+        <div class="loading-spinner">
+            <div class="spinner"></div>
+            <p>Loading...</p>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- Back to Top Button -->
+    <button class="back-to-top" id="back-to-top">
+        <i class="fas fa-chevron-up"></i>
+    </button>
+
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <!-- Core JavaScript -->
+    <script>
+        // Mobile Navigation Toggle
+        document.getElementById('mobile-toggle').addEventListener('click', function () {
+            const nav = document.getElementById('navbar-nav');
+            const toggle = this;
+            nav.classList.toggle('active');
+            toggle.classList.toggle('active');
+        });
+
+        // Search Toggle
+        document.getElementById('search-toggle').addEventListener('click', function () {
+            const searchBar = document.getElementById('search-bar');
+            searchBar.classList.toggle('active');
+            if (searchBar.classList.contains('active')) {
+                searchBar.querySelector('.search-input').focus();
+            }
+        });
+
+        // User Dropdown Toggle
+        document.getElementById('user-toggle').addEventListener('click', function (e) {
+            e.stopPropagation();
+            const dropdown = document.getElementById('user-dropdown');
+            dropdown.classList.toggle('active');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', function () {
+            const dropdown = document.getElementById('user-dropdown');
+            dropdown.classList.remove('active');
+        });
+
+        // Prevent dropdown from closing when clicking inside
+        document.getElementById('user-dropdown').addEventListener('click', function (e) {
+            e.stopPropagation();
+        });
+
+        // Back to Top Button
+        const backToTop = document.getElementById('back-to-top');
+        window.addEventListener('scroll', function () {
+            if (window.pageYOffset > 300) {
+                backToTop.classList.add('visible');
+            } else {
+                backToTop.classList.remove('visible');
+            }
+        });
+
+        backToTop.addEventListener('click', function () {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // Loading Overlay Functions
+        function showLoading() {
+            document.getElementById('loading-overlay').classList.add('active');
+        }
+
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.remove('active');
+        }
+
+        // Toast Notification System
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast toast-${type}`;
+
+            const icon = type === 'success' ? 'check-circle' :
+                type === 'error' ? 'exclamation-circle' :
+                    type === 'warning' ? 'exclamation-triangle' : 'info-circle';
+
+            toast.innerHTML = `
+                                        <i class="fas fa-${icon}"></i>
+                                        <span>${message}</span>
+                                        <button class="toast-close" onclick="this.parentElement.remove()">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    `;
+
+            container.appendChild(toast);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                if (toast.parentElement) {
+                    toast.remove();
+                }
+            }, 5000);
+        }
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+
+        // Add loading states to forms
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function () {
+                const submitBtn = this.querySelector('button[type="submit"], input[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+
+@functions {
+    // Helper function to check if user is admin (same logic as in AdminController)
+    private bool IsUserAdmin()
+    {
+        if (!User.Identity.IsAuthenticated) return false;
+
+        // Check by email
+        var userEmail = User.FindFirstValue(ClaimTypes.Email);
+        var adminEmails = new[] { "adminbluestore@gmail.com", "admin@gmail.com" };
+
+        if (adminEmails.Contains(userEmail.ToLower(), StringComparer.OrdinalIgnoreCase))
+        {
+            return true;
+        }
+        return false;
+    }
+}

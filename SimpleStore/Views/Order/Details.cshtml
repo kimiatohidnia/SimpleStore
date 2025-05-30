@@ -1,0 +1,287 @@
+﻿// Views/Order/Details.cshtml
+@model OrderDetailViewModel
+@{
+    ViewData["Title"] = $"Order #{Model.Id}";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>Order #@Model.Id</h2>
+                <a href="@Url.Action("History")" class="btn btn-outline-secondary">
+                    ← Back to Order History
+                </a>
+            </div>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span>&times;</span>
+                    </button>
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="close" data-dismiss="alert">
+                        <span>&times;</span>
+                    </button>
+                </div>
+            }
+
+            <div class="row">
+                <!-- Order Summary -->
+                <div class="col-md-8">
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5>Order Summary</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-3">
+                                <div class="col-sm-3"><strong>Order Date:</strong></div>
+                                <div class="col-sm-9">@Model.CreatedAt.ToString("MMMM dd, yyyy 'at' h:mm tt")</div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-sm-3"><strong>Status:</strong></div>
+                                <div class="col-sm-9">
+                                    <span class="badge badge-@GetStatusBadgeClass(Model.Status) badge-pill">
+                                        @Model.Status
+                                    </span>
+                                    @if (Model.CancellationRequested)
+                                    {
+                                        <span class="badge badge-warning ml-2">Cancellation Requested</span>
+                                    }
+                                    @if (Model.ReturnRequested)
+                                    {
+                                        <span class="badge badge-info ml-2">Return Requested</span>
+                                    }
+                                </div>
+                            </div>
+                            <div class="row mb-3">
+                                <div class="col-sm-3"><strong>Total Amount:</strong></div>
+                                <div class="col-sm-9"><strong>@Model.TotalPrice.ToString("C")</strong></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order Status Progress -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5>Order Status</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="progress-steps">
+                                <div class="step @(GetStepClass("Processing", Model.Status))">
+                                    <div class="step-icon">1</div>
+                                    <div class="step-label">Processing</div>
+                                </div>
+                                <div class="step @(GetStepClass("Shipped", Model.Status))">
+                                    <div class="step-icon">2</div>
+                                    <div class="step-label">Shipped</div>
+                                </div>
+                                <div class="step @(GetStepClass("Delivered", Model.Status))">
+                                    <div class="step-icon">3</div>
+                                    <div class="step-label">Delivered</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order Items -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Order Items</h5>
+                        </div>
+                        <div class="card-body">
+                            @foreach (var item in Model.Items)
+                            {
+                                <div class="row align-items-center py-2 border-bottom">
+                                    <div class="col-md-6">
+                                        <strong>@item.ProductName</strong>
+                                    </div>
+                                    <div class="col-md-2 text-center">
+                                        Qty: @item.Quantity
+                                    </div>
+                                    <div class="col-md-2 text-center">
+                                        @item.UnitPrice.ToString("C")
+                                    </div>
+                                    <div class="col-md-2 text-right">
+                                        <strong>@item.LineTotal.ToString("C")</strong>
+                                    </div>
+                                </div>
+                            }
+                            <div class="row mt-3">
+                                <div class="col-md-8"></div>
+                                <div class="col-md-2 text-center"><strong>Total:</strong></div>
+                                <div class="col-md-2 text-right"><strong>@Model.TotalPrice.ToString("C")</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Info Sidebar -->
+                <div class="col-md-4">
+                    <!-- Actions -->
+                    @if (Model.CanCancel || Model.CanReturn)
+                    {
+                        <div class="card mb-4">
+                            <div class="card-header">
+                                <h5>Actions</h5>
+                            </div>
+                            <div class="card-body">
+                                @if (Model.CanCancel)
+                                {
+                                    <form asp-action="RequestCancellation" asp-route-id="@Model.Id" method="post" 
+                                          onsubmit="return confirm('Are you sure you want to request cancellation for this order?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-warning btn-block mb-2">
+                                            Request Cancellation
+                                        </button>
+                                    </form>
+                                }
+                                @if (Model.CanReturn)
+                                {
+                                    <form asp-action="RequestReturn" asp-route-id="@Model.Id" method="post" 
+                                          onsubmit="return confirm('Are you sure you want to request a return for this order?');">
+                                        @Html.AntiForgeryToken()
+                                        <button type="submit" class="btn btn-info btn-block">
+                                            Request Return
+                                        </button>
+                                    </form>
+                                }
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Shipping Information -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5>Shipping Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <address class="mb-0">
+                                <strong>@Model.FullName</strong><br>
+                                @Model.Address<br>
+                                @Model.City, @Model.PostalCode
+                            </address>
+                        </div>
+                    </div>
+
+                    <!-- Payment Information -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h5>Payment Information</h5>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0">
+                                <strong>Payment Method:</strong><br>
+                                @Model.PaymentMethod
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.progress-steps {
+    display: flex;
+    justify-content: space-between;
+    position: relative;
+    margin: 20px 0;
+}
+
+.progress-steps::before {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: 25px;
+    right: 25px;
+    height: 2px;
+    background-color: #dee2e6;
+    z-index: 1;
+}
+
+.step {
+    text-align: center;
+    position: relative;
+    z-index: 2;
+}
+
+.step-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background-color: #dee2e6;
+    color: #6c757d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    font-weight: bold;
+}
+
+.step-label {
+    font-size: 14px;
+    color: #6c757d;
+}
+
+.step.active .step-icon {
+    background-color: #007bff;
+    color: white;
+}
+
+.step.active .step-label {
+    color: #007bff;
+    font-weight: bold;
+}
+
+.step.completed .step-icon {
+    background-color: #28a745;
+    color: white;
+}
+
+.step.completed .step-label {
+    color: #28a745;
+}
+</style>
+
+@functions {
+    private string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Processing" => "warning",
+            "Shipped" => "info",
+            "Delivered" => "success",
+            _ => "secondary"
+        };
+    }
+
+    private string GetStepClass(string stepStatus, string currentStatus)
+    {
+        var statusOrder = new Dictionary<string, int>
+        {
+            {"Processing", 1},
+            {"Shipped", 2},
+            {"Delivered", 3}
+        };
+
+        var stepOrder = statusOrder.GetValueOrDefault(stepStatus, 0);
+        var currentOrder = statusOrder.GetValueOrDefault(currentStatus, 0);
+
+        if (stepOrder < currentOrder)
+            return "completed";
+        else if (stepOrder == currentOrder)
+            return "active";
+        else
+            return "";
+    }
+}

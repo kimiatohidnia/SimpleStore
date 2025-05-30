@@ -1,0 +1,131 @@
+﻿@* Views/AdminOrder/Index.cshtml *@
+@model IEnumerable<SimpleStore.Models.Order>
+
+@{
+    ViewData["Title"] = "Manage Orders";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>@ViewData["Title"]</h2>
+                <div class="badge bg-info fs-6">Total Orders: @Model.Count()</div>
+            </div>
+
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            }
+
+            <div class="card">
+                <div class="card-header">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <form method="get" class="d-flex">
+                                <select name="statusFilter" class="form-select me-2" onchange="this.form.submit()">
+                                    <option value="">All Statuses</option>
+                                    @foreach (var status in ViewBag.Statuses)
+                                    {
+                                        <option value="@status.Value" selected="@(status.Value == ViewBag.StatusFilter)">@status.Text</option>
+                                    }
+                                </select>
+                            </form>
+                        </div>
+                        <div class="col-md-6 text-end">
+                            <small class="text-muted">
+                                @if (!string.IsNullOrEmpty(ViewBag.StatusFilter))
+                                {
+                                    <span>Filtered by: <strong>@ViewBag.StatusFilter</strong></span>
+                                }
+                                else
+                                {
+                                    <span>Showing all orders</span>
+                                }
+                            </small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Date</th>
+                                    <th>Total</th>
+                                    <th>Status</th>
+                                    <th>Items</th>
+                                    <th>Requests</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    <tr>
+                                        <td>
+                                            <strong>#@item.Id</strong>
+                                        </td>
+                                        <td>
+                                            <div>
+                                                <strong>@Html.DisplayFor(modelItem => item.FullName)</strong>
+                                                <br>
+                                                <small class="text-muted">@item.City</small>
+                                            </div>
+                                        </td>
+                                        <td>@item.CreatedAt.ToString("MM/dd/yyyy HH:mm")</td>
+                                        <td><strong>@item.TotalPrice.ToString("C")</strong></td>
+                                        <td>
+                                            <span class="badge @(item.Status == "Processing" ? "bg-warning" :
+                                                                item.Status == "Shipped" ? "bg-info" :
+                                                                item.Status == "Delivered" ? "bg-success" :
+                                                                item.Status == "Cancelled" ? "bg-danger" :
+                                                                item.Status == "Returned" ? "bg-secondary" : "bg-light text-dark")">
+                                                @item.Status
+                                            </span>
+                                        </td>
+                                        <td>@item.OrderItems.Count items</td>
+                                        <td>
+                                            @if (item.CancellationRequested)
+                                            {
+                                                <span class="badge bg-warning text-dark">Cancel Req.</span>
+                                            }
+                                            @if (item.ReturnRequested)
+                                            {
+                                                <span class="badge bg-info">Return Req.</span>
+                                            }
+                                            @if (!item.CancellationRequested && !item.ReturnRequested)
+                                            {
+                                                <span class="text-muted">None</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <div class="btn-group" role="group">
+                                                <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-sm btn-outline-info">Details</a>
+                                                <a asp-action="EditStatus" asp-route-id="@item.Id" class="btn btn-sm btn-outline-primary">Edit Status</a>
+                                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-outline-danger">Delete</a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,86 @@
+﻿@* Views/AdminProduct/Details.cshtml *@
+@model SimpleStore.Models.Product
+
+@{
+    ViewData["Title"] = "Product Details";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>@ViewData["Title"]</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4">
+                            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+                            {
+                                <img src="@Model.ImageUrl" alt="@Model.Name" class="img-fluid rounded">
+                            }
+                            else
+                            {
+                                <div class="bg-light rounded d-flex align-items-center justify-content-center" style="height: 200px;">
+                                    <span class="text-muted">No Image</span>
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-8">
+                            <dl class="row">
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Name)</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.Name)</dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Description)</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.Description)</dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Price)</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.Price)</dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Category)</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.Category)</dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.Stock)</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.Stock.HasValue)
+                                    {
+                                        <span class="badge @(Model.Stock < 5 ? "bg-danger" : Model.Stock < 10 ? "bg-warning" : "bg-success")">
+                                            @Model.Stock
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">N/A</span>
+                                    }
+                                </dd>
+
+                                <dt class="col-sm-4">Status</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Inactive</span>
+                                    }
+                                </dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.CreatedAt)</dt>
+                                <dd class="col-sm-8">@Model.CreatedAt.ToString("MMMM dd, yyyy 'at' HH:mm")</dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    <div class="d-flex justify-content-between mt-3">
+                        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+                        <div>
+                            <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-primary">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@Model.Id" class="btn btn-danger">Delete</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

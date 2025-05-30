@@ -1,0 +1,102 @@
+﻿@* Views/AdminUser/Details.cshtml *@
+@model SimpleStore.Controllers.AdminUserDetailsViewModel
+
+@{
+    ViewData["Title"] = "User Details";
+}
+
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-10">
+            <div class="card">
+                <div class="card-header">
+                    <h4>@ViewData["Title"]</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5>User Information</h5>
+                            <dl class="row">
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.User.Username)</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.User.Username)</dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.User.Email)</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.User.Email)</dd>
+
+                                <dt class="col-sm-4">User ID</dt>
+                                <dd class="col-sm-8">@Html.DisplayFor(model => model.User.Id)</dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.User.CreatedAt)</dt>
+                                <dd class="col-sm-8">@Model.User.CreatedAt.ToString("MMMM dd, yyyy 'at' HH:mm")</dd>
+
+                                <dt class="col-sm-4">@Html.DisplayNameFor(model => model.User.UpdatedAt)</dt>
+                                <dd class="col-sm-8">@Model.User.UpdatedAt.ToString("MMMM dd, yyyy 'at' HH:mm")</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <h5>Order Statistics</h5>
+                            <dl class="row">
+                                <dt class="col-sm-6">Total Orders:</dt>
+                                <dd class="col-sm-6"><span class="badge bg-primary">@Model.TotalOrders</span></dd>
+
+                                <dt class="col-sm-6">Total Spent:</dt>
+                                <dd class="col-sm-6"><span class="badge bg-success">@Model.TotalSpent.ToString("C")</span></dd>
+                            </dl>
+                        </div>
+                    </div>
+
+                    @if (Model.RecentOrders.Any())
+                    {
+                        <hr>
+                        <h5>Recent Orders</h5>
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Order ID</th>
+                                        <th>Date</th>
+                                        <th>Total</th>
+                                        <th>Status</th>
+                                        <th>Items</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var order in Model.RecentOrders)
+                                    {
+                                        <tr>
+                                            <td><a asp-controller="AdminOrder" asp-action="Details" asp-route-id="@order.Id">#@order.Id</a></td>
+                                            <td>@order.CreatedAt.ToString("MM/dd/yyyy")</td>
+                                            <td>@order.TotalPrice.ToString("C")</td>
+                                            <td>
+                                                <span class="badge @(order.Status == "Processing" ? "bg-warning" :
+                                                                    order.Status == "Shipped" ? "bg-info" :
+                                                                    order.Status == "Delivered" ? "bg-success" :
+                                                                    order.Status == "Cancelled" ? "bg-danger" : "bg-secondary")">
+                                                    @order.Status
+                                                </span>
+                                            </td>
+                                            <td>@order.OrderItems.Count items</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <hr>
+                        <p class="text-muted">This user has no orders yet.</p>
+                    }
+
+                    <div class="d-flex justify-content-between mt-3">
+                        <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+                        <div>
+                            <a asp-action="Edit" asp-route-id="@Model.User.Id" class="btn btn-primary">Edit User</a>
+                            <a asp-action="Delete" asp-route-id="@Model.User.Id" class="btn btn-danger">Delete User</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

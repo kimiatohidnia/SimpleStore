@@ -1,0 +1,83 @@
+﻿<!-- Views/Admin/Products.cshtml -->
+@model List<SimpleStore.Models.Product>
+@{
+    ViewData["Title"] = "Manage Products";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <h2>Manage Products</h2>
+        <hr />
+
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a asp-controller="Admin" asp-action="Dashboard">Dashboard</a></li>
+                <li class="breadcrumb-item active">Products</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>All Products (@Model.Count)</h5>
+                <a asp-controller="AdminProduct" asp-action="" class="btn btn-primary btn-auth">Edit Products</a>
+            </div>
+            <div class="card-body">
+                @if (Model.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Category</th>
+                                    <th>Price</th>
+                                    <th>Stock</th>
+                                    <th>Status</th>
+                                    <th>Created Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var product in Model)
+                                {
+                                    <tr class="@(!product.IsActive ? "table-secondary" : "")">
+                                        <td>@product.Id</td>
+                                        <td>@product.Name</td>
+                                        <td>@product.Category</td>
+                                        <td>@product.Price.ToString("C")</td>
+                                        <td>
+                                            @if (product.Stock.HasValue)
+                                            {
+                                                <span class="badge @(product.Stock < 5 ? "badge-warning" : "badge-success")">
+                                                    @product.Stock
+                                                </span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge badge-secondary">N/A</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <span class="badge @(product.IsActive ? "badge-success" : "badge-secondary")">
+                                                @(product.IsActive ? "Active" : "Inactive")
+                                            </span>
+                                        </td>
+                                        <td>@product.CreatedAt.ToString("MM/dd/yyyy")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">No products found.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>

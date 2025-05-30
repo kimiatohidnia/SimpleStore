@@ -1,0 +1,245 @@
+﻿@model SimpleStore.Controllers.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="row">
+    <div class="col-md-12">
+        <h2>Admin Dashboard</h2>
+        <hr />
+
+        @if (TempData["ErrorMessage"] != null)
+        {
+            <div class="alert alert-danger">
+                @TempData["ErrorMessage"]
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-4">
+        <div class="card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">Total Users</h4>
+                        <h2>@Model.TotalUsers</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-users fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">Total Orders</h4>
+                        <h2>@Model.TotalOrders</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-shopping-cart fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h4 class="card-title">Total Revenue</h4>
+                        <h2>@Model.TotalRevenue.ToString("C")</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="fas fa-dollar-sign fa-2x"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions -->
+<div class="row mb-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Quick Actions</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <a asp-controller="Admin" asp-action="Users" class="btn btn-outline-primary btn-block mb-2">
+                            <i class="fas fa-users"></i> Manage Users
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a asp-controller="Admin" asp-action="Orders" class="btn btn-outline-success btn-block mb-2">
+                            <i class="fas fa-shopping-cart"></i> View Orders
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a asp-controller="Admin" asp-action="Products" class="btn btn-outline-info btn-block mb-2">
+                            <i class="fas fa-box"></i> Manage Products
+                        </a>
+                    </div>
+                    <div class="col-md-3">
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary btn-block mb-2">
+                            <i class="fas fa-home"></i> Back to Store
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Low Stock Alert -->
+@if (Model.LowStockProducts.Any())
+{
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card border-warning">
+                <div class="card-header bg-warning text-dark">
+                    <h5><i class="fas fa-exclamation-triangle"></i> Low Stock Alert</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <th>Category</th>
+                                    <th>Current Stock</th>
+                                    <th>Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var product in Model.LowStockProducts)
+                                {
+                                    <tr class="@(product.Stock <= 2 ? "table-danger" : "table-warning")">
+                                        <td>@product.Name</td>
+                                        <td>@product.Category</td>
+                                        <td>
+                                            <span class="badge @(product.Stock <= 2 ? "badge-danger" : "badge-warning")">
+                                                @product.Stock
+                                            </span>
+                                        </td>
+                                        <td>@product.Price.ToString("C")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Recent Orders and Top Products -->
+<div class="row">
+    <!-- Recent Orders -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Recent Orders (Last 10)</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.RecentOrders.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Order #</th>
+                                    <th>Customer</th>
+                                    <th>Total</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var order in Model.RecentOrders)
+                                {
+                                    <tr>
+                                        <td>#@order.Id</td>
+                                        <td>@order.FullName</td>
+                                        <td>@order.TotalPrice.ToString("C")</td>
+                                        <td>@order.CreatedAt.ToString("MM/dd/yyyy")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center">
+                        <a asp-controller="Admin" asp-action="Orders" class="btn btn-sm btn-outline-primary">View All Orders</a>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">No recent orders found.</p>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Top Selling Products -->
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5>Top Selling Products</h5>
+            </div>
+            <div class="card-body">
+                @if (Model.TopSellingProducts.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr>
+                                    <th>Product</th>
+                                    <th>Category</th>
+                                    <th>Sold</th>
+                                    <th>Price</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var item in Model.TopSellingProducts)
+                                {
+                                    <tr>
+                                        <td>@item.Product.Name</td>
+                                        <td>@item.Product.Category</td>
+                                        <td>
+                                            <span class="badge badge-success">@item.TotalQuantitySold</span>
+                                        </td>
+                                        <td>@item.Product.Price.ToString("C")</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-center">
+                        <a asp-controller="Admin" asp-action="Products" class="btn btn-sm btn-outline-primary">View All Products</a>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted">No sales data available yet.</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" />
+}

@@ -1,0 +1,115 @@
+﻿@model SimpleStore.Models.Product
+
+@{
+    ViewData["Title"] = Model.Name;
+}
+
+@section Styles {
+    <style>
+    .form-control {
+        width: 45%;
+        padding: 0.75rem 1rem;
+        border: 2px solid var(--gray-200);
+        border-radius: var(--border-radius-sm);
+        font-size: 1rem;
+        transition: all var(--transition-fast);
+        background: var(--gray-50);
+        margin-top: 1rem;
+    }
+    </style>
+}
+<div class="container">
+    <div class="row">
+        <!-- Breadcrumb -->
+        <div class="col-12 mb-3">
+            <nav aria-label="breadcrumb" class="breadcrumbs">
+                <ol class="breadcrumb-list">
+                    <li class="breadcrumb-item"><a asp-controller="Home" asp-action="Index">Home</a></li>
+                    <li class="breadcrumb-item"><a asp-controller="Product" asp-action="Index">Products</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
+                </ol>
+            </nav>
+
+        </div>
+    </div>
+
+    @if (TempData["Message"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Message"]
+            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+            </button>
+        </div>
+    }
+
+    <div class="row">
+        <!-- Product Image -->
+        <div class="col-md-6 mb-4">
+            <img src="@(string.IsNullOrEmpty(Model.ImageUrl) ? "/images/no-image.jpg" : Model.ImageUrl)"
+                 alt="@Model.Name" class="img-fluid" style="max-height: 500px; width: 100%; object-fit: contain;" />
+        </div>
+
+        <!-- Product Details -->
+        <div class="col-md-6">
+            <h1 class="mb-3">@Model.Name</h1>
+
+            <div class="mb-3">
+                <span class="font-weight-bold h3 text-primary">@Model.Price.ToString("C")</span>
+            </div>
+
+            @if (Model.Stock.HasValue)
+            {
+                <div class="mb-3">
+                    <span class="@(Model.Stock > 0 ? "text-success" : "text-danger")">
+                        @(Model.Stock > 0 ? $"In Stock ({Model.Stock} available)" : "Out of Stock")
+                    </span>
+                </div>
+            }
+
+            <div class="mb-4">
+                <p>@Model.Description</p>
+            </div>
+
+            <form asp-action="AddToCart" asp-route-id="@Model.Id" method="post">
+                <div class="form-group">
+                    <div class="input-group mb-3" style="width: 150px;">
+                        <div class="input-group-append">
+                            <button class="btn btn-outline-secondary" type="button" id="increase-quantity">+</button>
+                        </div>
+                        <input type="number" id="quantity" name="quantity" class="form-control text-center" value="1" min="1" max="@(Model.Stock ?? 99)" />
+                        <div class="input-group-prepend">
+                            <button class="btn btn-outline-secondary" type="button" id="decrease-quantity">-</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg" @(Model.Stock.HasValue && Model.Stock <= 0 ? "disabled" : "")>
+                    <i class="fas fa-shopping-cart"></i> Add to Cart
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Quantity selector functionality
+        document.getElementById('decrease-quantity').addEventListener('click', function () {
+            var input = document.getElementById('quantity');
+            var value = parseInt(input.value, 10);
+            if (value > 1) {
+                input.value = value - 1;
+            }
+        });
+
+        document.getElementById('increase-quantity').addEventListener('click', function () {
+            var input = document.getElementById('quantity');
+            var value = parseInt(input.value, 10);
+            var max = parseInt(input.getAttribute('max'), 10);
+            if (value < max) {
+                input.value = value + 1;
+            }
+        });
+    </script>
+}
