@@ -23,7 +23,7 @@ namespace SimpleStore.Models
         public string PaymentMethod { get; set; }
 
         // For displaying cart summary on checkout page
-        public List<CartItem> CartItems { get; set; }
-        public decimal TotalPrice { get; set; }
+        public List<CartItem>? CartItems { get; set; }
+        public decimal TotalPrice { get; set; } = 0;
     }
 }

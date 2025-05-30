@@ -12,6 +12,8 @@ namespace SimpleStore.Data
         public DbSet<Product> Products { get; set; }
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<Wishlist> Wishlists { get; set; }
+        public DbSet<WishlistItem> WishlistItems { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -19,6 +21,47 @@ namespace SimpleStore.Data
             modelBuilder.Entity<User>()
                 .HasIndex(u => u.Email)
                 .IsUnique();
+
+            // Configure Order relationships
+            modelBuilder.Entity<OrderItem>()
+                .HasOne(oi => oi.Order)
+                .WithMany(o => o.OrderItems)
+                .HasForeignKey(oi => oi.OrderId);
+
+            modelBuilder.Entity<OrderItem>()
+                .HasOne(oi => oi.Product)
+                .WithMany()
+                .HasForeignKey(oi => oi.ProductId);
+
+            // Configure Wishlist relationships
+            modelBuilder.Entity<Wishlist>()
+                .HasOne(w => w.User)
+                .WithMany()
+                .HasForeignKey(w => w.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<WishlistItem>()
+                .HasOne(wi => wi.Wishlist)
+                .WithMany(w => w.WishlistItems)
+                .HasForeignKey(wi => wi.WishlistId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<WishlistItem>()
+                .HasOne(wi => wi.Product)
+                .WithMany()
+                .HasForeignKey(wi => wi.ProductId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            // Ensure one wishlist per user
+            modelBuilder.Entity<Wishlist>()
+                .HasIndex(w => w.UserId)
+                .IsUnique();
+
+            // Prevent duplicate products in same wishlist
+            modelBuilder.Entity<WishlistItem>()
+                .HasIndex(wi => new { wi.WishlistId, wi.ProductId })
+                .IsUnique();
+
             // Seed some sample products
             modelBuilder.Entity<Product>().HasData(
                 new Product

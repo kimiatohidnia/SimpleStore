@@ -16,8 +16,51 @@
         background: var(--gray-50);
         margin-top: 1rem;
     }
+    
+    .product-actions {
+        margin-top: 2rem;
+    }
+    
+    .action-buttons {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+    }
+    
+    .quantity-selector {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    
+    #wishlist-btn {
+        transition: all 0.3s ease;
+    }
+    
+    #wishlist-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    
+    #wishlist-btn:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    
+    @@media (max-width: 768px) {
+        .action-buttons {
+            flex-direction: column;
+            width: 100%;
+        }
+        
+        .action-buttons .btn {
+            width: 100%;
+        }
+    }
     </style>
 }
+
 <div class="container">
     <div class="row">
         <!-- Breadcrumb -->
@@ -29,7 +72,6 @@
                     <li class="breadcrumb-item active" aria-current="page">@Model.Name</li>
                 </ol>
             </nav>
-
         </div>
     </div>
 
@@ -71,23 +113,49 @@
                 <p>@Model.Description</p>
             </div>
 
-            <form asp-action="AddToCart" asp-route-id="@Model.Id" method="post">
-                <div class="form-group">
-                    <div class="input-group mb-3" style="width: 150px;">
-                        <div class="input-group-append">
-                            <button class="btn btn-outline-secondary" type="button" id="increase-quantity">+</button>
-                        </div>
-                        <input type="number" id="quantity" name="quantity" class="form-control text-center" value="1" min="1" max="@(Model.Stock ?? 99)" />
-                        <div class="input-group-prepend">
-                            <button class="btn btn-outline-secondary" type="button" id="decrease-quantity">-</button>
+            <!-- Updated Product Actions with Wishlist -->
+            <div class="product-actions">
+                <form asp-controller="Product" asp-action="AddToCart" method="post" class="add-to-cart-form">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" value="@Model.Id" />
+                    
+                    <div class="form-group">
+                        <div class="input-group mb-3" style="width: 150px;">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary" type="button" id="increase-quantity">+</button>
+                            </div>
+                            <input type="number" id="quantity" name="quantity" class="form-control text-center" value="1" min="1" max="@(Model.Stock ?? 99)" />
+                            <div class="input-group-prepend">
+                                <button class="btn btn-outline-secondary" type="button" id="decrease-quantity">-</button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                <button type="submit" class="btn btn-primary btn-lg" @(Model.Stock.HasValue && Model.Stock <= 0 ? "disabled" : "")>
-                    <i class="fas fa-shopping-cart"></i> Add to Cart
-                </button>
-            </form>
+                    <div class="action-buttons">
+                        <button type="submit" class="btn btn-primary btn-lg me-2" @(Model.Stock.HasValue && Model.Stock <= 0 ? "disabled" : "")>
+                            <i class="fas fa-shopping-cart"></i> Add to Cart
+                        </button>
+                        
+                        @if (User.Identity.IsAuthenticated)
+                        {
+                            <button type="button" 
+                                    id="wishlist-btn" 
+                                    class="btn btn-outline-danger btn-lg"
+                                    onclick="toggleWishlist(@Model.Id)">
+                                <i id="wishlist-icon" class="fas fa-heart"></i>
+                                <span id="wishlist-text">Add to Wishlist</span>
+                            </button>
+                        }
+                        else
+                        {
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-outline-danger btn-lg">
+                                <i class="fas fa-heart"></i>
+                                Login to Add to Wishlist
+                            </a>
+                        }
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
@@ -112,4 +180,103 @@
             }
         });
     </script>
+    
+    @if (User.Identity.IsAuthenticated)
+    {
+        <!-- JavaScript for wishlist functionality -->
+        <script>
+            let isInWishlist = false;
+            
+            // Check if product is already in wishlist when page loads
+            document.addEventListener('DOMContentLoaded', function() {
+                checkWishlistStatus(@Model.Id);
+            });
+
+            function checkWishlistStatus(productId) {
+                fetch(`@Url.Action("IsInWishlist", "Wishlist")?productId=${productId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        isInWishlist = data.inWishlist;
+                        updateWishlistButton();
+                    })
+                    .catch(error => console.log('Error checking wishlist status:', error));
+            }
+
+            function toggleWishlist(productId) {
+                const url = isInWishlist ? 
+                    '@Url.Action("RemoveFromWishlist", "Wishlist")' : 
+                    '@Url.Action("AddToWishlist", "Wishlist")';
+                
+                const button = document.getElementById('wishlist-btn');
+                button.disabled = true;
+                
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]').value
+                    },
+                    body: `productId=${productId}&__RequestVerificationToken=${document.querySelector('input[name="__RequestVerificationToken"]').value}`
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        isInWishlist = !isInWishlist;
+                        updateWishlistButton();
+                        showNotification(data.message, 'success');
+                        
+                        // Update wishlist badge in header
+                        if (typeof updateWishlistBadge === 'function') {
+                            updateWishlistBadge(data.itemCount || 0);
+                        }
+                    } else {
+                        showNotification(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.log('Error:', error);
+                    showNotification('An error occurred. Please try again.', 'error');
+                })
+                .finally(() => {
+                    button.disabled = false;
+                });
+            }
+
+            function updateWishlistButton() {
+                const button = document.getElementById('wishlist-btn');
+                const icon = document.getElementById('wishlist-icon');
+                const text = document.getElementById('wishlist-text');
+                
+                if (isInWishlist) {
+                    button.className = 'btn btn-danger btn-lg';
+                    icon.className = 'fas fa-heart';
+                    text.textContent = 'Remove from Wishlist';
+                } else {
+                    button.className = 'btn btn-outline-danger btn-lg';
+                    icon.className = 'far fa-heart';
+                    text.textContent = 'Add to Wishlist';
+                }
+            }
+
+            function showNotification(message, type) {
+                // Create a simple notification
+                const alertClass = type === 'success' ? 'alert-success' : 
+                                  type === 'error' ? 'alert-danger' : 'alert-info';
+                
+                const notification = document.createElement('div');
+                notification.className = `alert ${alertClass} alert-dismissible fade show position-fixed`;
+                notification.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+                notification.innerHTML = `
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                    ${message}
+                `;
+                
+                document.body.appendChild(notification);
+                
+                setTimeout(() => {
+                    notification.remove();
+                }, 3000);
+            }
+        </script>
+    }
 }

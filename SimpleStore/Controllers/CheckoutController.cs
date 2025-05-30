@@ -37,106 +37,24 @@ namespace SimpleStore.Controllers
             return View(checkoutViewModel);
         }
 
-        //[HttpPost]
-        //[ValidateAntiForgeryToken]
-        //public async Task<IActionResult> PlaceOrder(CheckoutViewModel model)
-        //{
-        //    _logger.LogInformation("PlaceOrder method called");
-
-        //    try
-        //    {
-        //        if (!ModelState.IsValid)
-        //        {
-        //            _logger.LogWarning("Model validation failed");
-        //            var cart = GetCartFromSession();
-        //            model.CartItems = cart.Items;
-        //            model.TotalPrice = cart.TotalPrice;
-        //            return View("Index", model);
-        //        }
-
-        //        var cartViewModel = GetCartFromSession();
-        //        if (cartViewModel.Items.Count == 0)
-        //        {
-        //            _logger.LogWarning("Cart is empty during order placement");
-        //            TempData["ErrorMessage"] = "Your cart is empty. Please add items before checkout.";
-        //            return RedirectToAction("Index", "Cart");
-        //        }
-
-        //        _logger.LogInformation($"Processing order with {cartViewModel.Items.Count} items");
-
-        //        var order = new Order
-        //        {
-        //            FullName = model.FullName,
-        //            Address = model.Address,
-        //            City = model.City,
-        //            PostalCode = model.PostalCode,
-        //            PaymentMethod = model.PaymentMethod,
-        //            TotalPrice = cartViewModel.TotalPrice,
-        //            CreatedAt = DateTime.Now,
-        //            Status = "Processing"
-        //        };
-
-        //        // Set UserId from claims if authenticated
-        //        if (User.Identity.IsAuthenticated)
-        //        {
-        //            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-        //            if (!string.IsNullOrEmpty(userId))
-        //            {
-        //                order.UserId = userId;
-        //                _logger.LogInformation($"Order assigned to user: {userId}");
-        //            }
-        //        }
-        //        else
-        //        {
-        //            _logger.LogInformation("Processing guest order");
-        //        }
-
-        //        // Add order items
-        //        foreach (var item in cartViewModel.Items)
-        //        {
-        //            var orderItem = new OrderItem
-        //            {
-        //                ProductId = item.ProductId,
-        //                ProductName = item.ProductName,
-        //                Quantity = item.Quantity,
-        //                UnitPrice = item.UnitPrice
-        //            };
-        //            order.OrderItems.Add(orderItem);
-        //            _logger.LogInformation($"Added order item: {item.ProductName} x {item.Quantity}");
-        //        }
-
-        //        // Save to database
-        //        _context.Orders.Add(order);
-        //        await _context.SaveChangesAsync();
-        //        _logger.LogInformation($"Order saved successfully with ID: {order.Id}");
-
-        //        // Clear the cart
-        //        HttpContext.Session.Remove("Cart");
-        //        _logger.LogInformation("Cart cleared from session");
-
-        //        // Store order ID for confirmation page
-        //        TempData["OrderId"] = order.Id;
-        //        TempData["SuccessMessage"] = "Your order has been placed successfully!";
-
-        //        return RedirectToAction(nameof(Confirmation));
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error occurred while placing order");
-        //        TempData["ErrorMessage"] = "An error occurred while processing your order. Please try again.";
-
-        //        // Return to checkout form with error
-        //        var cart = GetCartFromSession();
-        //        model.CartItems = cart.Items;
-        //        model.TotalPrice = cart.TotalPrice;
-        //        return View("Index", model);
-        //    }
-        //}
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> PlaceOrder(CheckoutViewModel model)
         {
+            _logger.LogInformation("PlaceOrder method called");
+
+            // Add this debugging code
+            _logger.LogInformation($"Model.CartItems is null: {model.CartItems == null}");
+            _logger.LogInformation($"Model.CartItems count: {model.CartItems?.Count ?? 0}");
+            _logger.LogInformation($"ModelState.IsValid: {ModelState.IsValid}");
+
+            // Log all validation errors
+            foreach (var error in ModelState.Values.SelectMany(v => v.Errors))
+            {
+                _logger.LogWarning($"Validation error: {error.ErrorMessage}");
+            }
+
+
             _logger.LogInformation("PlaceOrder method called");
 
             try

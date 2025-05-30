@@ -14,7 +14,7 @@
                 </div>
                 <div class="card-body">
                     <form asp-controller="Checkout" asp-action="PlaceOrder" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger"></div>
+                        <div asp-validation-summary="All" class="text-danger"></div>
 
                         <div class="mb-3">
                             <label asp-for="FullName" class="form-label"></label>

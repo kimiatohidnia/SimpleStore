@@ -6,49 +6,6 @@
 
 @section Styles {
     <style>
-     /*    .filters-section {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: var(--border-radius);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-            box-shadow: var(--shadow-soft);
-            backdrop-filter: blur(10px);
-        }
-
-        .filter-controls {
-            display: flex;
-            gap: 1.5rem;
-            align-items: end;
-            flex-wrap: wrap;
-        }
-
-        .filter-group {
-            display: flex;
-            flex-direction: column;
-            min-width: 180px;
-        }
-
-        .filter-label {
-            font-weight: 600;
-            color: var(--text-dark);
-            margin-bottom: 0.5rem;
-            font-size: 0.9rem;
-        }
-
-        .filter-select {
-            border: 2px solid var(--light-blue);
-            border-radius: 12px;
-            padding: 0.5rem 0.75rem;
-            background: rgba(255, 255, 255, 0.9);
-            transition: var(--transition);
-        }
-
-        .filter-select:focus {
-            border-color: var(--primary-blue);
-            box-shadow: 0 0 0 3px rgba(135, 206, 235, 0.2);
-            outline: none;
-        } */
-
         .products-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
@@ -122,12 +79,19 @@
             justify-content: space-between;
             align-items: center;
             margin-top: auto;
+            gap: 1rem;
         }
 
         .product-price {
             font-size: 1.2rem;
             font-weight: 700;
             color: var(--primary-blue);
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
         }
 
         .view-details-btn {
@@ -148,6 +112,74 @@
             box-shadow: 0 4px 12px rgba(135, 206, 235, 0.4);
             color: white;
             text-decoration: none;
+        }
+
+        /* Wishlist Heart Button Styles */
+        .wishlist-quick-btn {
+            transition: all 0.3s ease;
+            background: none;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            padding: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            outline: none;
+        }
+
+        /* حالت عادی - قلب توخالی */
+        .wishlist-quick-btn {
+            color: #999;
+        }
+
+            .wishlist-quick-btn:hover {
+                transform: scale(1.1);
+                color: #dc3545;
+            }
+
+            /* حالت کلیک شده - قلب پر */
+            .wishlist-quick-btn.active,
+            .wishlist-quick-btn.btn-danger {
+                color: #dc3545;
+            }
+
+                .wishlist-quick-btn.active:hover,
+                .wishlist-quick-btn.btn-danger:hover {
+                    transform: scale(1.1);
+                    color: #c82333;
+                }
+
+            /* برای آیکون قلب */
+            .wishlist-quick-btn i {
+                font-size: 18px;
+                transition: all 0.3s ease;
+            }
+
+            /* قلب توخالی - استفاده از far fa-heart */
+            .wishlist-quick-btn:not(.active) i::before {
+                content: "\f08a"; /* far fa-heart - قلب توخالی */
+                font-family: "Font Awesome 5 Free";
+                font-weight: 400;
+            }
+
+            /* قلب پر - استفاده از fas fa-heart */
+            .wishlist-quick-btn.active i::before,
+            .wishlist-quick-btn.btn-danger i::before {
+                content: "\f004"; /* fas fa-heart - قلب پر */
+                font-family: "Font Awesome 5 Free";
+                font-weight: 900;
+            }
+
+        .category-badge {
+            backdrop-filter: blur(10px);
+            background-color: rgba(0, 123, 255, 0.9);
+            color: white;
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 12px;
         }
 
         .no-products {
@@ -200,6 +232,18 @@
             box-shadow: var(--shadow-soft);
         }
 
+        /* Notification Animations */
+        @@keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
         /* Mobile Responsiveness */
         @@media (max-width: 768px) {
             .filter-controls {
@@ -214,6 +258,16 @@
             .products-grid {
                 grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
                 gap: 1rem;
+            }
+
+            .product-footer {
+                flex-direction: column;
+                gap: 0.5rem;
+                align-items: stretch;
+            }
+
+            .product-actions {
+                justify-content: center;
             }
         }
     </style>
@@ -269,21 +323,31 @@ else
         @foreach (var product in Model.Products)
         {
             <div class="product-card">
-                <div class="product-image">
+                <div class="product-image position-relative">
                     <img src="@(string.IsNullOrEmpty(product.ImageUrl) ? "/images/no-image.jpg" : product.ImageUrl)" 
                          alt="@product.Name" 
                          loading="lazy">
                 </div>
                 <div class="product-info">
                     <h5 class="product-title">@product.Name</h5>
-                    @* <p class="product-description">@product.Description</p> *@
                     <div class="product-footer">
                         <span class="product-price">@product.Price.ToString("C")</span>
-                        <a asp-action="Details" 
-                           asp-route-id="@product.Id" 
-                           class="view-details-btn">
-                            <i class="fas fa-eye me-1"></i>View Details
-                        </a>
+                        <div class="product-actions">
+                            <a asp-action="Details" 
+                               asp-route-id="@product.Id" 
+                               class="view-details-btn">
+                                <i class="fas fa-eye me-1"></i>View Details
+                            </a>
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <button class="wishlist-quick-btn"
+                                        onclick="quickToggleWishlist(@product.Id, this)"
+                                        data-product-id="@product.Id"
+                                        title="Add to Wishlist">
+                                    <i class="far fa-heart"></i>
+                                </button>
+                            }
+                        </div>
                     </div>
                 </div>
             </div>
@@ -342,10 +406,13 @@ else
     }
 }
 
+<!-- Add this hidden form for CSRF token -->
+@Html.AntiForgeryToken()
+
 @section Scripts {
     <script>
         // Enhanced search functionality
-        document.getElementById('searchInput').addEventListener('keypress', function(e) {
+        document.getElementById('searchInput')?.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 document.getElementById('filterForm').submit();
@@ -355,15 +422,143 @@ else
         // Add loading state to search button
         document.getElementById('filterForm').addEventListener('submit', function() {
             const searchBtn = document.querySelector('.search-btn');
-            const originalText = searchBtn.innerHTML;
-            searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Searching...';
-            searchBtn.disabled = true;
-            
-            // Re-enable after a short delay (in case form doesn't submit)
-            setTimeout(function() {
-                searchBtn.innerHTML = originalText;
-                searchBtn.disabled = false;
-            }, 3000);
+            if (searchBtn) {
+                const originalText = searchBtn.innerHTML;
+                searchBtn.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Searching...';
+                searchBtn.disabled = true;
+                
+                // Re-enable after a short delay (in case form doesn't submit)
+                setTimeout(function() {
+                    searchBtn.innerHTML = originalText;
+                    searchBtn.disabled = false;
+                }, 3000);
+            }
         });
     </script>
+
+    @if (User.Identity.IsAuthenticated)
+    {
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                // Check wishlist status for all products on page load
+                checkAllWishlistStatuses();
+            });
+
+            function checkAllWishlistStatuses() {
+                const wishlistButtons = document.querySelectorAll('.wishlist-quick-btn, [data-product-id]');
+                
+                wishlistButtons.forEach(button => {
+                    const productId = button.getAttribute('data-product-id');
+                    if (productId) {
+                        checkProductWishlistStatus(productId, button);
+                    }
+                });
+            }
+
+            function checkProductWishlistStatus(productId, button) {
+                fetch(`@Url.Action("IsInWishlist", "Wishlist")?productId=${productId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        updateWishlistButtonState(button, data.inWishlist);
+                    })
+                    .catch(error => console.log('Error checking wishlist status:', error));
+            }
+
+            function quickToggleWishlist(productId, button) {
+                // بررسی وضعیت فعلی با کلاس active
+                const isCurrentlyInWishlist = button.classList.contains('active') || button.classList.contains('btn-danger');
+                const url = isCurrentlyInWishlist ?
+                    '@Url.Action("RemoveFromWishlist", "Wishlist")' :
+                    '@Url.Action("AddToWishlist", "Wishlist")';
+
+                // Disable button during request
+                button.disabled = true;
+
+                const token = document.querySelector('input[name="__RequestVerificationToken"]');
+                const tokenValue = token ? token.value : '';
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: `productId=${productId}&__RequestVerificationToken=${tokenValue}`
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            updateWishlistButtonState(button, !isCurrentlyInWishlist);
+                            showQuickNotification(data.message, 'success');
+
+                            // Update all buttons for this product
+                            const allButtons = document.querySelectorAll(`[data-product-id="${productId}"]`);
+                            allButtons.forEach(btn => {
+                                if (btn !== button) {
+                                    updateWishlistButtonState(btn, !isCurrentlyInWishlist);
+                                }
+                            });
+
+                            // Update wishlist badge in header
+                            if (typeof updateWishlistBadge === 'function') {
+                                updateWishlistBadge(data.itemCount || 0);
+                            }
+                        } else {
+                            showQuickNotification(data.message, 'error');
+                        }
+                    })
+                    .catch(error => {
+                        console.log('Error:', error);
+                        showQuickNotification('An error occurred. Please try again.', 'error');
+                    })
+                    .finally(() => {
+                        button.disabled = false;
+                    });
+            }
+
+            function updateWishlistButtonState(button, isInWishlist) {
+                const icon = button.querySelector('i');
+
+                if (isInWishlist) {
+                    // اضافه کردن کلاس active برای قلب پر
+                    button.classList.add('active');
+                    button.classList.remove('btn-outline-danger');
+                    button.classList.add('btn-danger');
+                    button.title = 'Remove from Wishlist';
+                    if (icon) {
+                        icon.className = 'fas fa-heart';
+                    }
+                } else {
+                    button.classList.remove('active');
+                    button.classList.remove('btn-danger');
+                    button.classList.add('btn-outline-danger');
+                    button.title = 'Add to Wishlist';
+                    if (icon) {
+                        icon.className = 'far fa-heart';
+                    }
+                }
+            }
+
+            function showQuickNotification(message, type) {
+                // Create a toast-like notification
+                const toast = document.createElement('div');
+                toast.className = `alert alert-${type === 'success' ? 'success' : 'danger'} position-fixed`;
+                toast.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 250px; animation: slideIn 0.3s ease;';
+                toast.innerHTML = `
+                    <div class="d-flex align-items-center">
+                        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'} me-2"></i>
+                        <span>${message}</span>
+                        <button type="button" class="btn-close ms-auto" onclick="this.parentElement.parentElement.remove()"></button>
+                    </div>
+                `;
+                
+                document.body.appendChild(toast);
+                
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 3000);
+            }
+        </script>
+    }
 }
